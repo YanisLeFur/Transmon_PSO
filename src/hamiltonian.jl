@@ -125,3 +125,27 @@ function rwa_c_no_rwa_d(omega_t::Vector{Float64},delta::Float64,g::QuantumObject
     return dense_to_sparse(H_0);
 
 end
+
+
+
+function rwa_c_rwa_d(omega_t::Vector{Float64},delta::Float64,omega_d::Float64,g::QuantumObject,b::QuantumObject,a::QuantumObject)::QuantumObject
+    """
+    Compute the transmon hamiltonian with RWA on the coupling and drive
+    Args:
+        - omega_t(Vector{Float64}): frequencies of the transmon
+        - delta(Float64): detuning between the transmon and the resonator
+        - g(Float64): coupling value between the resonator and the transmon
+        - n(QuantumObject): charge operator of the transmon manifold
+        - a(QuantumObject): annihilation operator of the cavity
+    Returns:
+        - Transmon-cavity hamiltonian with RWA on the coupling and drive (QuantumObject)
+    """
+    omega_q = omega_t[2]-omega_t[1]
+    omega_r = omega_q - delta
+    H_0 = (omega_r-omega_d) * a'*a + (g'*b'*a+g*a'*b)
+    for i in 1:Nt
+        H_0 = H_0 + omega_t[i] * kron(eye(Nc),fock(Nt,i-1)*fock(Nt,i-1)')  
+    end
+    return dense_to_sparse(H_0);
+
+end
