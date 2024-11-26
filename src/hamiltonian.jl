@@ -1,24 +1,6 @@
 using QuantumToolbox
 
 
-function dispersive_tls(omega_q::Float64,delta_rq::Float64,delta_rd::Float64,g::Float64,a::QuantumObject,s_z::QuantumObject)::QuantumObject
-    """ 
-    Hamiltonian of the tls coupled to a cavity in the dispersive limit and in the rotating picture of the drive
-    Args:
-        - omega_q: frequency of the qubit (Float64)
-        - delta_rq: detuning between the resonator and qubit (Float64)
-        - delta_rd: detuning between the drive and the resonator (Float64)
-        - g: cavity-qubit coupling  (Float64)
-        - a: destruction operator of the cavity (QuantumObject)
-        - s_z: pauli z matrix (QuantumObject)
-    Returns:
-        - dispersive two-level system hamiltonian (QuantumObject)
-    """
-    chi = g^2/delta_rq;
-    omega_q_prime = omega_q + chi;
-    return dense_to_sparse((delta_rd + chi * s_z) * a'*a + omega_q_prime * s_z/2);
-end;
-
 function jc_tls(delta_qr,omega_q,delta_rd,g,a,s_z,s_m)
     """
     Hamiltonian of the JC (cavity-TLS) in the rotating picture of the drive
@@ -38,71 +20,6 @@ function jc_tls(delta_qr,omega_q,delta_rd,g,a,s_z,s_m)
     omega_d = delta_rd + omega_r
     delta_qd = omega_q - omega_d
     H_0 = delta_rd*a'*a + delta_qd/2*s_z + (g'*a*s_m + g*a'*s_m');
-    return dense_to_sparse(H_0);
-end;
-
-
-function chi_disp_SW(j,j_prime,g,delta,ec)
-    """
-    Compute the dispersive shift created between the  j-th and j_prime-th levels of the transmon when coupled to a resonator.
-    Args:
-        - j : j-th level of the transmon (Int64)
-        - j_prime : j_prime-th level of the transmon (Int64)
-        - g : cavity-qubit coupling (Float64)
-        - delta : detuning among the bare frequency of the qubit and the resonator (Float64)
-        - ec : capacitance energy (Float64)
-    Returns:
-        - dispersive shift between (j,j_prime) levels of the transmons (Float64)    
-    """
-    return j_prime*g^2/(delta-(j)*ec);
-end;
-
-function dispersive_SW(omega_q,omega_t,delta,g,ec,a,b,Nt,Nc)::QuantumObject
-    """
-    Schrieffer-Wolff approximation of the transmon-cavity hamiltonian.
-    Args:
-        - omega_q : frequency of the qubit (Float64)
-        - delta : detuning among the bare frequency of the qubit and the resonator (Float64)
-        - g : cavity-qubit coupling (Float64)
-        - ec : capacitance energy (Float64)
-        - a : annihilation operator of the resonator (QuantumObject)
-        - b : annihilation operator of the qubit (QuantumObject)
-        - Nt : Dimension of the Hilbert space of the qubit
-        - Nc : Dimension of the Hilbert space of the resonator
-    Returns: 
-         - The n-level transmon-cavity hamiltonian with SW approximation (QuantumObject)
-    """
-    omega_r = omega_q - delta
-    H_0 = omega_r*a'*a + omega_q*b'*b - ec/2* b'*b'*b*b
-    chi_inf = [chi_disp_SW(j-2,j-1,g,delta,ec) for j in 1:Nt]
-    chi_sup = [chi_disp_SW(j-1,j,g,delta,ec) for j in 1:Nt]
-    chi_diag = chi_inf.-chi_sup
-    for i in 1:Nt
-        H_0 = H_0 +(omega_t[i] + chi_diag[i]*a'a + chi_inf[i])*kron(eye(Nc),fock(Nt,i-1)*fock(Nt,i-1)')  
-    end
-    return dense_to_sparse(H_0);
-end;
-
-function effective_SW_disp(omega_q,delta,g,ec,omega_d,a,s_z)::QuantumObject
-    """
-    Effective TLS of the SW approximation in the dispersive regime.
-    Args:
-        - omega_q :frequency of the qubit (Float64)
-        - delta : detuning among the bare frequency of the qubit and the resonator (Float64)
-        - g : cavity-qubit coupling (Float64)
-        - ec : capacitance energy (Float64)
-        - omega_d : drive frequenvy of the laser (Float64)
-        - a : annihilation operator of the resonator (QuantumObject)
-        - s_z : pauli matrix z of the qubit (QuantumObject)
-    Returns:
-        - The effective 2-level system of the transmon-cavity hamiltonian under SW approximation (QuantumObject)
-    """
-    omega_q_prime = omega_q + g^2/delta
-    chi = (-(g^2*ec)/(delta*(delta-ec)))
-    omega_r = omega_q - delta 
-    omega_r_prime = omega_r - g^2/(delta- ec)
-    delta_rd = omega_r_prime-omega_d
-    H_0 =  (delta_rd + chi * s_z) * a'*a + omega_q_prime * s_z/2
     return dense_to_sparse(H_0);
 end;
 
