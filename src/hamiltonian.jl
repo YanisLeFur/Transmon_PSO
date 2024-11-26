@@ -1,6 +1,5 @@
 using QuantumToolbox
 
-
 function jc_tls(delta_qr,omega_q,delta_rd,g,a,s_z,s_m)
     """
     Hamiltonian of the JC (cavity-TLS) in the rotating picture of the drive
@@ -24,7 +23,7 @@ function jc_tls(delta_qr,omega_q,delta_rd,g,a,s_z,s_m)
 end;
 
 
-function chi_ij(g_ji::Complex64,omega_r::Float64,omega_i::Float64,omega_j::Float64)::Float64
+function chi_ij(g_ji,omega_r::Float64,omega_i::Float64,omega_j::Float64)::Float64
     """ 
     Compute the dispersive shift for the dispersive hamiltonian
     Args:
@@ -144,7 +143,7 @@ function rwa_c_rwa_d(omega_t::Vector{Float64},delta::Float64,omega_d::Float64,g:
     omega_r = omega_q - delta
     H_0 = (omega_r-omega_d) * a'*a + (g'*b'*a+g*a'*b)
     for i in 1:Nt
-        H_0 = H_0 + omega_t[i] * kron(eye(Nc),fock(Nt,i-1)*fock(Nt,i-1)')  
+        H_0 = H_0 + (omega_t[i]-omega_d) * kron(eye(Nc),fock(Nt,i-1)*fock(Nt,i-1)')  
     end
     return dense_to_sparse(H_0);
 
