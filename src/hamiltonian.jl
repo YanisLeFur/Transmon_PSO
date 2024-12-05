@@ -227,44 +227,21 @@ function sausage(params)
 end
 
 
-
-# function dispersive_tls(omega_r,omega_q,chi,a,s_z)
-                       
-#     """
-#     Generate the effective TLS hamiltonian of a transmon-cavity system with dispersive coupling and RWA applied on the drive
-#     Args:
-#         - omega_r(Float64): frequency of the cavity
-#         - omega_q(Float64): frequency of the TLS
-#         - chi(Float64): dispersive shift of the TLS
-#         - a(QuantumObject): annihilation operator of the cavity
-#         - s_z(QuantumObject): pauli matrix z associated to the TLS
-
-#     Returns:
-#         - TLS-cavity in dispersive coupling hamiltonian (QuantumObject)
+function sausage(params)
     
-#     """
-#     return omega_r*a'*a + omega_q*s_z/2 + chi*a'*a*s_z
-# end
-
-# function dispersive_tls(omega_q,delta,g,ec,omega_d,a,s_z)
-#     """
-#     Effective TLS of the SW approximation in the dispersive regime.
-#     Args:
-#         - omega_q :frequency of the qubit (Float64)
-#         - delta : detuning among the bare frequency of the qubit and the resonator (Float64)
-#         - g : cavity-qubit coupling (Float64)
-#         - ec : capacitance energy (Float64)
-#         - omega_d : drive frequenvy of the laser (Float64)
-#         - a : annihilation operator of the resonator (QuantumObject)
-#         - s_z : pauli matrix z of the qubit (QuantumObject)
-#     Returns:
-#         - The effective 2-level system of the transmon-cavity hamiltonian under SW approximation (QuantumObject)
-#     """
-#     omega_q_prime = omega_q + g^2/delta
-#     chi = (-(g^2*ec)/(delta*(delta-ec)))
-#     omega_r = omega_q - delta 
-#     omega_r_prime = omega_r - g^2/(delta- ec)
-#     delta_rd = omega_r_prime-omega_d
-#     H_0 =  (delta_rd + chi * s_z) * a'*a + omega_q_prime * s_z/2
-#     return dense_to_sparse(H_0);
-# end;
+    # Preparing ingredients
+    transmon = Transmon(Nt,Nx,params[1],params[2])
+    resonator = Resonator(Nr,params[3],params[4])
+    L0,state0,state1,omega_r_dressed = hamitlonian(transmon,resonator,[params[5],params[6]],op)
+    a = kron(resonator.a,eye(transmon.Nt))
+    L1 = liouvillian(a'-a) |> op
+    tlist = LinRange(0.0,params[7],nsteps)
+    drive(p,t) = 1im*square_gaussian(t,p.tau,p.sigma,p.risefall_sigma_ratio,p.amp).* sin(p.omega_d * t);
+    Lt = (L0,(L1,drive))
+    params_drive = (tau = params[7],sigma = params[8],risefall_sigma_ratio = params[9],amp = params[10],omega_d = params[11])
+    
+    # Making the sausage
+    sol0 = mesolve(Lt, state0, tlist, saveat=tlist, params=params_drive);
+    sol1 = mesolve(Lt, state1, tlist, saveat=tlist, params=params_drive);
+    return distance_fidelity(ptrace(sol0.states[end],1),ptrace(sol1.states[end],1))
+end
