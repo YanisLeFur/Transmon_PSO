@@ -1,4 +1,4 @@
-using QuantumToolbox
+# using QuantumToolbox
 
 
 function get_overlap(func1::Matrix{Float64}, func2::Matrix{Float64})::Matrix{Float64}
@@ -34,12 +34,12 @@ function overlap_error(state1::QuantumObject,state2::QuantumObject,dimension::Tu
     return sum(overlap_vector);
 end;
 
-function distance_fidelity(state1::QuantumObject, state2::QuantumObject)::Float64
+function distance_error(state1::QuantumObject, state2::QuantumObject)::Float64
     """
     Using the formula of error Perr from https://journals.aps.org/pra/pdf/10.1103/PhysRevA.77.032311
     F = 1-Perr
     """
-    return 1-0.5*(1-0.5*norm(state1-state2));
+    return 0.5*(1-0.5*norm(state1-state2));
 end;
 
 
@@ -86,3 +86,23 @@ function diagonalize_transmon(Nt::Int64,Nx::Int64,ec::Float64,ej::Float64)
 end
 
 
+
+
+function find_smallest_square(n, maxiters=1e4)
+    iter = 0
+    while iter < maxiters
+        m = n + iter
+        isqrt(m) == sqrt(m) && return iter
+        iter += 1
+    end
+    throw(ErrorException("No perfect square found."))
+end
+
+function extract_dm(rho_eff, dims, which::Int)
+    N = prod(dims)^2
+    rho_vec = view(mat2vec(rho_eff.data), (1+(which-1)*N):which*N)
+
+    rho = Qobj(vec2mat(rho_vec), dims=dims, type=Operator)
+
+    return rho
+end
