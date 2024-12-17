@@ -50,6 +50,37 @@ return 1-0.5*(1-0.5*norm(ptrace(output0.states[end],1)-ptrace(output1.states[end
 end;
 
 
+function simpson_integrator(y, x)
+    n = length(y)-1
+    n % 2 == 0 || error("`y` length (number of intervals) must be odd")
+    length(x)-1 == n || error("`x` and `y` length must be equal")
+    h = (x[end]-x[1])/n
+    s = sum(y[1:2:n] + 4y[2:2:n] + y[3:2:n+1])
+    return h/3 * s
+end
+
+
+function opposite_SNR(states_0,states_1,a,tlist,eta,kappa)
+    betas_0 = expect(a,states_0)
+    betas_1 = expect(a,states_1)
+    integrated_signal = 0.0
+   
+    if length(betas_0)!=length(betas_1)
+        # This tricks is to avoid that one the arrays by an error 
+        # is having a different shape than the other array
+        n = minimum(length(betas_0),length(betas_1))
+        n += iseven(n)
+        println("DIFFERENT LENGTH",length(betas_0)," ",length(betas_1))
+        diff_beta = norm.(betas_0[1:n]-betas_1[1:n]).^2
+        integrated_signal = simpson_integrator(diff_beta,tlist)
+    else
+        diff_beta = norm.(betas_0-betas_1).^2
+        integrated_signal = simpson_integrator(diff_beta,tlist)
+    end
+
+    return -sqrt(2*eta*kappa*integrated_signal)
+end
+
 function plot_wigner(output0,output1,xx)
     figure = Figure(size = (800, 400))    
     w = wigner(normalize!(ptrace(output0.states[end],1)), xx, xx)
@@ -72,8 +103,8 @@ function diagonalize_transmon(Nt::Int64,Nx::Int64,ec::Float64,ej::Float64)
     dx = x_l[2] - x_l[1] 
     x = Qobj(spdiagm(0 => x_l)) 
     p = 1 / (2 * dx) * spdiagm(-1 => -ones(ComplexF64, Nx - 1), 1 => ones(ComplexF64, Nx - 1))
-    p[1, end] = 1 / (2 * dx)
-    p[end, 1] = -1 / (2 * dx)
+    p[1, end] = -1 / (2 * dx)
+    p[end, 1] = 1 / (2 * dx)
     n = -1im * p |> Qobj 
     p2 = 1 / (dx^2) * spdiagm(-1 => ones(ComplexF64, Nx - 1), 0 => -2 * ones(Nx), 1 => ones(Nx - 1))
     p2[1, end] = 1 / dx^2
