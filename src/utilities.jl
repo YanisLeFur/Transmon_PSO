@@ -65,14 +65,14 @@ function opposite_SNR(states_0,states_1,a,tlist,eta,kappa)
     betas_1 = expect(a,states_1)
     integrated_signal = 0.0
    
-    if length(betas_0)!=length(betas_1)
+    if length(states_0)!=length(states_1)
         # This tricks is to avoid that one the arrays by an error 
         # is having a different shape than the other array
-        n = minimum(length(betas_0),length(betas_1))
-        n += iseven(n)
-        println("DIFFERENT LENGTH",length(betas_0)," ",length(betas_1))
+        println("DIFFERENT LENGTH",length(states_0)," ",length(states_1))
+        n = min(length(states_0),length(states_1))
+        n -= iseven(n)
         diff_beta = norm.(betas_0[1:n]-betas_1[1:n]).^2
-        integrated_signal = simpson_integrator(diff_beta,tlist)
+        integrated_signal = simpson_integrator(diff_beta,tlist[1:n])
     else
         diff_beta = norm.(betas_0-betas_1).^2
         integrated_signal = simpson_integrator(diff_beta,tlist)
@@ -80,6 +80,23 @@ function opposite_SNR(states_0,states_1,a,tlist,eta,kappa)
 
     return -sqrt(2*eta*kappa*integrated_signal)
 end
+
+
+function overlap_err(states0,states1,tlist)
+    if length(states0)!=length(states1)
+        # This tricks is to avoid that one the arrays by an error 
+        # is having a different shape than the other array
+        println("DIFFERENT LENGTH",length(states0)," ",length(states1))
+        n = min(length(states0),length(states1))
+        n -= iseven(n)
+        integrated_overlap = simpson_integrator(tr.(states0[1:n].*states1[1:n]),tlist[1:n])
+    else
+    integrated_overlap = simpson_integrator(tr.(states0.*states1),tlist)
+    end
+    return real(integrated_overlap/(2*tlist[end]))
+end
+
+
 
 function plot_wigner(output0,output1,xx)
     figure = Figure(size = (800, 400))    
