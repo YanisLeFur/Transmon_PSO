@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH --job-name=simulation
+#SBATCH --output=simulation.out
+#SBATCH --account=ltpn
+#SBATCH --nodes=1
+#SBATCH --partition=h100
+#SBATCH --gpus=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=6
+#SBATCH --mem=124GB
+#SBATCH --qos=normal
+#SBATCH --time 1:00:00
+
+export PATH=/home/lefur/.juliaup/bin:$PATH
+# Now run Julia
+julia --project simulation.jl

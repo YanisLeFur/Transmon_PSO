@@ -1,0 +1,16 @@
+#!/bin/bash
+#SBATCH --job-name=PSO_resonator
+#SBATCH --output=PSO_resonator.out
+#SBATCH --account=ltpn
+#SBATCH --nodes=8
+#SBATCH --partition=h100
+#SBATCH --gpus=32
+#SBATCH --ntasks-per-node=4
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=124GB
+#SBATCH --qos=normal
+#SBATCH --time 2-00:00:00	
+
+export PATH=/home/lefur/.juliaup/bin:$PATH
+# Now run Julia
+julia --project PSO_parallel.jl
