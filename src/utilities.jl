@@ -154,3 +154,8 @@ function extract_dm(rho_eff, dims, which::Int)
 
     return rho
 end
+
+
+function relu(x)
+    return max(0,x)
+end

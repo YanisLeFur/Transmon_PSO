@@ -55,6 +55,9 @@ function coupling_norwa_drive_norwa(transmon::Transmon,resonator::Resonator,c_co
     return L0,state_0,state_1,omega_r_dressed
 end
 
+
+
+
 function coupling_rwa_drive_norwa(transmon::Transmon,resonator::Resonator,c_coeff,op)
     Ht,_,nt_tr,a = kron_system(transmon,resonator)
     nt_p = tensor(qeye(resonator.Nr), triu(nt_tr))
@@ -169,6 +172,7 @@ function disp_c_rwa_d(transmon,resonator,c_coeff,omega_d,op)
     for i in 1:Nt
         H_0 = H_0 +(E[i] + chi[i]*a'a + lamb_[i]) * kron(eye(Nr),fock(Nt,i-1)*fock(Nt,i-1)')  
     end
+    
     E,V = eigenstates(H_0, sparse=true, k=3, sigma=-transmon.ej - 0.5)
     state_0 = Qobj((V[1])) |>op
     state_1 =Qobj((V[2])) |>op
